@@ -21,7 +21,7 @@ if($mysql->connect_error)
 }
 else
 {
-    echo "Connected";
+    //echo "Connected";
 }
 
 $mysql->close();

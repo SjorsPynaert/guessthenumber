@@ -11,60 +11,93 @@ include "inc/functions.php";
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <link rel="stylesheet" href="css/bootstrap.css">
+
     <title>Document</title>
 </head>
 <body>
-    <header>
-        Guess the number!
+    <header class=
+    "w-auto
+    h-auto
+    bg-dark
+    text-white
+    p-3">
+    Guess the number!
     </header>
-        <div id="containerGame">
-            <form action="">
-                <h1>Guess the number!</h1>
-                <h2>Guess the number | Play | Sjors Pynaert</h2>
+        <div class=
+             "w-100
+             h-auto
+             d-flex
+             justify-content-center
+             align-content-center
+             ">
+            <div class=
+                 "m-3
+                 border
+                 border-dark
+                 rounded-5
+                 p-3
+                 ">
+                <form action="">
+                    <h2>Guess the number!</h2>
+                    <h3>Guess the number | Play | Sjors Pynaert</h3>
 
-                <p>Time left:</p>
-                <p>Time Spent:</p>
+                    <p>Time left:</p>
+                    <p>Time Spent:</p>
 
-                <label for="">Your guess:</label>
-                <input type="text"/>
-                <p>Max:</p>
+                    <label for="">Your guess:</label>
+                    <input type="text"/>
+                    <p>Max:</p>
 
-                <button>Make your guess</button>
-                <button>Quit or reset</button>
-            </form>
+                    <button>Make your guess</button>
+                    <button>Quit or reset</button>
+                </form>
 
-            <h1>Message:</h1>
-            <p>Number of Guesses:</p>
-            <p>Previously Guessed:</p>
+                <h2>Message:</h2>
+                <p>Number of Guesses:</p>
+                <p>Previously Guessed:</p>
 
-            <h1>Current High Scores</h1>
+                <h2>Current High Scores</h2>
 
-            <table>
-                <caption>High scores guess the number</caption>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Place</th>
-                            <th>Player</th>
-                            <th>Range</th>
-                            <th>Max seconds</th>
-                            <th>Max tries</th>
-                            <th>Num guesses</th>
-                            <th>Time</th>
-                            <th>Secret number</th>
-                            <th>Cheated</th>
-                            <th>Played date</th>
-                        </tr>
-                    </thead>
+                <table>
+                    <caption>High scores guess the number</caption>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Place</th>
+                                <th>Player</th>
+                                <th>Range</th>
+                                <th>Max seconds</th>
+                                <th>Max tries</th>
+                                <th>Num guesses</th>
+                                <th>Time</th>
+                                <th>Secret number</th>
+                                <th>Cheated</th>
+                                <th>Played date</th>
+                            </tr>
+                        </thead>
 
-                    <tbody>
-                    <!-- add for each to fetch the highscores from the database -->
-                    </tbody>
+                        <tbody>
+                        <!-- add for each to fetch the highscores from the database -->
+                        </tbody>
 
-            </table>
+                </table>
+            </div>
         </div>
-    <footer>
-
+    <footer class=
+    "w-100
+    h-auto
+    bg-dark
+    text-white
+    p-1
+    position-fixed
+    bottom-0
+    d-flex
+    justify-content-center">
+    Sjors Pynaert all rights reserved
     </footer>
+
+    <script src="js/bootstrap.js"></script>
 </body>
 </html>
