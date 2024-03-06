@@ -12,7 +12,9 @@ include "inc/functions.php";
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
+    <!-- bootstrap and stylesheet links -->
     <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/style.css">
 
     <title>Document</title>
 </head>
@@ -94,7 +96,9 @@ include "inc/functions.php";
     position-fixed
     bottom-0
     d-flex
-    justify-content-center">
+    justify-content-center
+    main-footer
+    ">
     Sjors Pynaert all rights reserved
     </footer>
 

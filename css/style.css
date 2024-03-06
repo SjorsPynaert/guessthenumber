@@ -1,0 +1,8 @@
+.main-footer {
+    opacity: 50%;
+    transition: opacity 1s ease-in-out;
+}
+
+.main-footer:hover {
+    opacity: 1;
+}
