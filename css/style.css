@@ -1,3 +1,6 @@
+/*
+//game.php
+*/
 .main-footer {
     opacity: 50%;
     transition: opacity 1s ease-in-out;
@@ -11,4 +14,8 @@
     position: absolute;
     right: 0;
     top: 0;
+}
+
+#popupquitorreset {
+    display: none;
 }
