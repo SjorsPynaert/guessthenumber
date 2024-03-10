@@ -133,33 +133,7 @@ function contentGame()
                 <p>Number of guesses: <span id="numberofguesses">0</span></p>
                 <p>Previously guessed: <span id="previouslyguessed"></span></p>
                 <div class="border border-dark mb-2 opacity-50"></div>
-
-                <h2>High Scores:</h2>
-                <table class="table">
-                    <!-- table head -->
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Place</th>
-                            <th>Player</th>
-                            <th>Range</th>
-                            <th>Max seconds</th>
-                            <th>Max tries</th>
-                            <th>Num guesses</th>
-                            <th>Time</th>
-                            <th>Hidden number</th>
-                            <th>Play date</th>
-                        </tr>
-                    </thead>
-
-                    <!-- table body -->
-                    <tbody>
-                        <!-- Insert some kind of foreach that fetches the scores from the database. -->
-                        <tr>
-
-                        </tr>
-                    </tbody>
-                </table>
+                <?php highScoresTable() ?>
             </div>
         </div>
 
@@ -211,12 +185,10 @@ function contentGame()
                 passedTime++;
                 if(maxTime === 0)
                 {
-                    isEnabled = false;
-                    timeElement.innerHTML = "Time is up!";
-                    guessButton.disabled = true;
-                    userInput.disabled = true;
+                    disable();
                     timeElement.innerHTML = maxTime.toString();
                     timeSpend.innerHTML = passedTime.toString();
+                    timeElement.innerHTML = "Time is up!";
                 }
                 else
                 {
@@ -235,7 +207,7 @@ function contentGame()
             }
             else
             {
-                let url = "inc/handlegame.php?" + "function=guess&userguess=" + userValue + "&passedtime=" + passedTime;
+                let url = "inc/functions.php?" + "function=guess&userguess=" + userValue + "&passedtime=" + passedTime;
 
                 //Check if the user's guess is correct or not.
                 let xhttp = new XMLHttpRequest();
@@ -243,14 +215,12 @@ function contentGame()
                     if (this.readyState == 4 && this.status == 200) {
                         if (this.responseText === "correct") {
                             //respond with correct, stop the timer and proceed to enter the user's score into the database.
-                            logMessage.innerHTML = "Correct!";
-                            isEnabled = false;
                             remainingTries--;
-                            maxTries.innerHTML = remainingTries;
                             totalGuesses++;
+                            logMessage.innerHTML = "Correct!";
+                            maxTries.innerHTML = remainingTries;
                             numberOfGuesses.innerHTML = totalGuesses.toString();
-                            guessButton.disabled = true;
-                            userInput.disabled = true;
+                            disable();
                         }
                         else if(this.responseText === "high")
                         {
@@ -259,9 +229,7 @@ function contentGame()
                             maxTries.innerHTML = remainingTries;
                             if(remainingTries === 0)
                             {
-                                guessButton.disabled = true;
-                                userInput.disabled = true;
-                                isEnabled = false;
+                                disable();
                             }
                             numberOfGuesses.innerHTML = totalGuesses.toString();
                             logMessage.innerHTML = "Incorrect! You guessed to high!";
@@ -274,9 +242,7 @@ function contentGame()
                             maxTries.innerHTML = remainingTries;
                             if(remainingTries === 0)
                             {
-                                guessButton.disabled = true;
-                                userInput.disabled = true;
-                                isEnabled = false;
+                                disable();
                             }
                             numberOfGuesses.innerHTML = totalGuesses.toString();
                             logMessage.innerHTML = "Incorrect! You guessed to low!";
@@ -288,6 +254,20 @@ function contentGame()
                 xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                 xhttp.send();
             }
+        }
+
+        function enable()
+        {
+            guessButton.disabled = false;
+            userInput.disabled = false;
+            isEnabled = true;
+        }
+
+        function disable()
+        {
+            guessButton.disabled = true;
+            userInput.disabled = true;
+            isEnabled = false;
         }
 
         //Function for showing dialogue box.
@@ -315,12 +295,10 @@ function contentGame()
                     totalGuesses = 0;
                     numberOfGuesses.innerHTML = totalGuesses.toString();
                     quitOrResetPopUp.style.display = "none";
-                    guessButton.disabled = false;
-                    userInput.disabled = false;
-                    isEnabled = true;
+                    enable();
                 }
             }
-            xhttp.open("GET", "inc/handlegame.php?" + "function=resetgame", true);
+            xhttp.open("GET", "inc/functions.php?" + "function=resetgame", true);
             xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
             xhttp.send();
         }
@@ -342,5 +320,58 @@ function contentGame()
 
 function highScoresTable()
 {
+    $highscoreData = getHighscoreData();
+    ?>
+    <h2>High Scores:</h2>
+            <table class="table">
+                <!-- table head -->
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Place</th>
+                        <th>Player</th>
+                        <th>Range</th>
+                        <th>Max seconds</th>
+                        <th>Max tries</th>
+                        <th>Num guesses</th>
+                        <th>Time</th>
+                        <th>Hidden number</th>
+                        <th>Play date</th>
+                    </tr>
+                </thead>
 
+                <!-- table body -->
+                <tbody>
+                    <?php
+                    //Simple foreach to pump out the data. Make sure to also check whether the returned data is not null.
+                    if(!$highscoreData)
+                    {
+                        ?><h2>No high scores available.</h2><?php
+                    }
+                    else
+                    {
+                        $i = 1;
+                        while ($row = $highscoreData->fetch_assoc())
+                        {
+                            ?>
+                            <tr>
+                                <td><?php echo $row['id']; ?></td>
+                                <td><?php echo $i; ?></td>
+                                <td><?php echo $row['player']; ?></td>
+                                <td><?php echo $row['range']; ?></td>
+                                <td><?php echo $row['maxseconds'] ?></td>
+                                <td><?php echo $row['maxtries']; ?></td>
+                                <td><?php echo $row['numguesses']; ?></td>
+                                <td><?php echo $row['time']; ?></td>
+                                <td><?php echo $row['hiddennumber']; ?></td>
+                                <td><?php echo $row['playeddate']; ?></td>
+                            </tr>
+                            <?php
+                            $i++;
+                        }
+                    }
+                    ?>
+                </tbody>
+            </table>
+    <?php
 }
