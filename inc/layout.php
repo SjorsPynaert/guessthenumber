@@ -19,12 +19,20 @@ function HTMLheader()
     </head>
     <body>
     <header class=
-            "w-auto
-        h-auto
-        bg-dark
-        text-white
-        p-3">
-        Guess the number!
+    "w-auto
+    h-auto
+    bg-dark
+    text-white
+    p-3">
+        <div class="d-flex">
+            <div class="container-title">
+                <a class="text-decoration-none text-white d-inline-block" href="index.php">Guess the Number!</a>
+            </div>
+            <div class="w-auto h-auto d-flex">
+                <a class="text-decoration-none margin-right" href="index.php">Home</a>
+                <a class="text-decoration-none" href="highscores.php">High Scores</a>
+            </div>
+        </div>
     </header>
     <?php
 }
@@ -72,20 +80,28 @@ function contentIndex()
 
 
                             <label for="" class="form-label">Your name:</label>
-                            <input type="text" class="d-block form-text w-100 mb-2 form-control" name="yourname"/>
+                            <input type="text" class="d-block form-text w-100 mb-2 form-control" name="yourname" required/>
 
                             <label for="" class="form-label">Set minimum:</label>
-                            <input type="text" class="d-block form-text w-100 mb-2 form-control" name="minnumber"/>
+                            <input type="number" min="0" class="d-block form-text w-100 mb-2 form-control" name="minnumber" required/>
 
                             <label for="" class="form-label">Set maximum:</label>
-                            <input type="text" class="d-block form-text w-100 mb-2 form-control" name="maxnumber"/>
+                            <input type="number" min="0" class="d-block form-text w-100 mb-2 form-control" name="maxnumber" required/>
 
                             <label for="" class="form-label">Max number of tries:</label>
-                            <input type="text" class="d-block form-text w-100 mb-2 form-control" name="maxtries"/>
+                            <input type="number" min="0" class="d-block form-text w-100 mb-2 form-control" name="maxtries" required/>
 
                             <label for="" class="form-label">Max number of seconds:</label>
-                            <input type="text" class="d-block form-text w-100 mb-2 form-control" name="maxseconds"/>
+                            <input type="number" min="0" max="150" class="d-block form-text w-100 mb-2 form-control" name="maxseconds" required/>
 
+                            <?php
+                            //Log message
+                            if(isset($_SESSION['message']))
+                            {
+                                ?><p><?php echo $_SESSION['message'];?></p><?php
+                                unset($_SESSION['message']);
+                            }
+                            ?>
                             <button type="submit" class="btn btn-primary">Submit</button>
                             <button type="reset" class="btn btn-danger">Reset</button>
                         </form>
@@ -133,6 +149,7 @@ function contentGame()
                 <p>Number of guesses: <span id="numberofguesses">0</span></p>
                 <p>Previously guessed: <span id="previouslyguessed"></span></p>
                 <div class="border border-dark mb-2 opacity-50"></div>
+                <h2>High Scores:</h2>
                 <?php highScoresTable() ?>
             </div>
         </div>
@@ -168,6 +185,7 @@ function contentGame()
         let previouslyGuessed = document.getElementById("previouslyguessed");
         let numberOfGuesses = document.getElementById("numberofguesses");
         let maxTries = document.getElementById("remainingtries");
+        let highScoreTableBody = document.getElementById("highscoretablebody");
 
         //Some variables.
         let maxTime = <?php echo $_SESSION['maxseconds'];?>;
@@ -213,14 +231,18 @@ function contentGame()
                 let xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
-                        if (this.responseText === "correct") {
+                        if (this.responseText === "low") {
                             //respond with correct, stop the timer and proceed to enter the user's score into the database.
-                            remainingTries--;
                             totalGuesses++;
-                            logMessage.innerHTML = "Correct!";
+                            remainingTries--;
                             maxTries.innerHTML = remainingTries;
+                            if(remainingTries === 0)
+                            {
+                                disable();
+                            }
                             numberOfGuesses.innerHTML = totalGuesses.toString();
-                            disable();
+                            logMessage.innerHTML = "Incorrect! You guessed to low!";
+                            previouslyGuessed.innerHTML = userValue;
                         }
                         else if(this.responseText === "high")
                         {
@@ -237,16 +259,14 @@ function contentGame()
                         }
                         else
                         {
-                            totalGuesses++;
+                            let JSONData = JSON.parse(this.response);
+                            updateTableData(JSONData);
                             remainingTries--;
+                            totalGuesses++;
+                            logMessage.innerHTML = "Correct!";
                             maxTries.innerHTML = remainingTries;
-                            if(remainingTries === 0)
-                            {
-                                disable();
-                            }
                             numberOfGuesses.innerHTML = totalGuesses.toString();
-                            logMessage.innerHTML = "Incorrect! You guessed to low!";
-                            previouslyGuessed.innerHTML = userValue;
+                            disable();
                         }
                     }
                 }
@@ -313,8 +333,88 @@ function contentGame()
         {
             window.location.href = "index.php";
         }
+
+        function updateTableData(JSON)
+        {
+            //Clear the table body and insert the new data.
+            highScoreTableBody.innerHTML = "";
+            let i = 1;
+
+            JSON.forEach((highscore) => {
+                /*Apparently you need to create a new row and table-data element for each element cause else it would
+                replace the previous one.*/
+                let row = document.createElement("tr");
+
+                let td = document.createElement("td");
+                td.innerHTML = highscore.id;
+                row.appendChild(td)
+
+                td = document.createElement("td");
+                td.innerHTML = i.toString();
+                row.appendChild(td)
+
+                td = document.createElement("td");
+                td.innerHTML = highscore.player;
+                row.appendChild(td)
+
+                td = document.createElement("td");
+                td.innerHTML = highscore.range;
+                row.appendChild(td)
+
+                td = document.createElement("td");
+                td.innerHTML = highscore.maxseconds;
+                row.appendChild(td)
+
+                td = document.createElement("td");
+                td.innerHTML = highscore.maxtries;
+                row.appendChild(td)
+
+                td = document.createElement("td");
+                td.innerHTML = highscore.numguesses;
+                row.appendChild(td)
+
+                td = document.createElement("td");
+                td.innerHTML = highscore.time;
+                row.appendChild(td)
+
+                td = document.createElement("td");
+                td.innerHTML = highscore.hiddennumber;
+                row.appendChild(td)
+
+                td = document.createElement("td");
+                td.innerHTML = highscore.playeddate;
+                row.appendChild(td)
+
+                highScoreTableBody.appendChild(row);
+
+                i++;
+            });
+        }
     </script>
 
+    <?php
+}
+
+function contentHighScores()
+{
+    ?>
+    <div class="w-100
+    h-auto
+    d-flex
+    justify-content-center
+    align-content-center
+    ">
+        <div class="mt-5 mb-5 shadow d-flex flex-column">
+            <div class="bg-primary text-white p-3 w-100 h-auto">
+                <h2>High Scores:</h2>
+            </div>
+            <div class="bg-white w-100 h-auto p-3">
+                <?php
+                highScoresTable();
+                ?>
+            </div>
+        </div>
+    </div>
     <?php
 }
 
@@ -322,7 +422,6 @@ function highScoresTable()
 {
     $highscoreData = getHighscoreData();
     ?>
-    <h2>High Scores:</h2>
             <table class="table">
                 <!-- table head -->
                 <thead>
@@ -341,7 +440,7 @@ function highScoresTable()
                 </thead>
 
                 <!-- table body -->
-                <tbody>
+                <tbody id="highscoretablebody">
                     <?php
                     //Simple foreach to pump out the data. Make sure to also check whether the returned data is not null.
                     if(!$highscoreData)

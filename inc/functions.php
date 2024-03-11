@@ -56,8 +56,6 @@ else if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET['function']) && $_GE
         $_SESSION['passedtime'] = $_GET['passedtime'];
         $_SESSION['dateandtime'] = date('Y-m-d H:i:s');
 
-        echo "correct";
-
         $sql = "INSERT INTO highscores (`player`, `range`, `maxseconds`, `maxtries`, `numguesses`, `time`, `hiddennumber` ,`playeddate`)
         VALUES ('{$_SESSION["player"]}'
         , '{$_SESSION["range"]}'
@@ -70,10 +68,30 @@ else if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET['function']) && $_GE
 
         $database = new mysqli($server, $username, $password, $databaseName);
 
+        //Check if the database instance does get created else die.
         if($database->query($sql) === false) {
             die("Error couldn't create new instance in the database.");
         }
+
+        //Gather the table data.
+        $highScoreData = getHighscoreData();
+
+        //Close database.
         $database->close();
+
+        $data = [];
+
+        while($row = $highScoreData->fetch_assoc())
+        {
+            $data[] = $row;
+        }
+
+        //Set content type header, convert the data to JSON and parse the data.
+        header("Content-Type: application/json");
+
+        $JSON = json_encode($data);
+
+        echo $JSON;
     }
     else
     {
@@ -91,6 +109,13 @@ else if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET['function']) && $_GE
 
 if($_SERVER['REQUEST_METHOD'] == "POST")
 {
+    //Check if the min number is higher than the max number else redirect back.
+    if($_POST['minnumber'] >= $_POST['maxnumber'])
+    {
+        header("Location: index.php");
+        $_SESSION['message'] = "Minimum number can't be the same or higher than the maximum number!";
+        exit();
+    }
     updateSessiondata();
 }
 
