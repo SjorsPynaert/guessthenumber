@@ -94,6 +94,13 @@ function contentIndex()
                             <label for="" class="form-label">Max number of seconds:</label>
                             <input type="number" min="0" max="150" class="d-block form-text w-100 mb-2 form-control" name="maxseconds" required/>
 
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" value="" name="showsessiondata" id="flexCheckDefault">
+                                <label class="form-check-label" for="flexCheckDefault">
+                                    Show session data?
+                                </label>
+                            </div>
+
                             <?php
                             //Log message
                             if(isset($_SESSION['message']))
@@ -149,8 +156,25 @@ function contentGame()
                 <p>Number of guesses: <span id="numberofguesses">0</span></p>
                 <p>Previously guessed: <span id="previouslyguessed"></span></p>
                 <div class="border border-dark mb-2 opacity-50"></div>
+            </div>
+            <div class="p-3 bg-primary w-100 h-auto text-white">
+                <?php
+                if(isset($_SESSION['showsessiondata']) && $_SESSION['showsessiondata'] === 1){
+                    echo '<pre id="sessiondata">' . print_r($_SESSION, TRUE) . '</pre>';
+                }
+                else
+                {
+                    /*We need to make sure this element exists if this is not the case javascript will throw an
+                    error because it can't create a variable if it attempts to read the element.*/
+                    echo '<pre id="sessiondata"></pre>';
+                }
+                ?>
+            </div>
+            <div class="p-3 bg-white w-100 h-auto">
                 <h2>High Scores:</h2>
-                <?php highScoresTable() ?>
+                <?php
+                highScoresTable();
+                ?>
             </div>
         </div>
 
@@ -194,6 +218,7 @@ function contentGame()
         let totalGuesses = 0;
         let remainingTries = <?php echo $_SESSION['maxtries'];?>;
         let isEnabled = true;
+        let showSessionData = <?php echo $_SESSION['showsessiondata']?>;
 
         //Timer that activates every second.
         let interval = setInterval(function (){
@@ -216,6 +241,14 @@ function contentGame()
             }
         }, 1000);
 
+        //Function for showing dialogue box.
+        function showDialogueBox(message)
+        {
+            guessButton.disabled = true;
+            quitOrResetMessage.innerHTML = message;
+            quitOrResetPopUp.style.display = "block";
+        }
+
         function guess()
         {
             let userValue = userInput.value;
@@ -225,42 +258,50 @@ function contentGame()
             }
             else
             {
-                let url = "inc/functions.php?" + "function=guess&userguess=" + userValue + "&passedtime=" + passedTime;
+                let url = "inc/functions.php?" + "function=guess&userguess=" + userValue;
 
                 //Check if the user's guess is correct or not.
                 let xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
-                        if (this.responseText === "low") {
-                            //respond with correct, stop the timer and proceed to enter the user's score into the database.
-                            totalGuesses++;
-                            remainingTries--;
-                            maxTries.innerHTML = remainingTries;
-                            if(remainingTries === 0)
+                        if(showSessionData === 1)
+                        {
+                            let JSONResponse = JSON.parse(this.response);
+                            let sessionDataContainer = document.getElementById("sessiondata");
+                            if(JSONResponse.message === "low")
                             {
+                                sessionDataContainer.innerHTML = JSONResponse.session
+                                updateLow(userValue);
+                            }
+                            else if(JSONResponse.message === "high")
+                            {
+                                sessionDataContainer.innerHTML = JSONResponse.session
+                                updateHigh(userValue);
+                            }
+                            else
+                            {
+                                sessionDataContainer.innerHTML = JSONResponse.session
+                                updateTableData(JSONResponse.data)
+                                remainingTries--;
+                                totalGuesses++;
+                                logMessage.innerHTML = "Correct!";
+                                maxTries.innerHTML = remainingTries;
+                                numberOfGuesses.innerHTML = totalGuesses.toString();
                                 disable();
                             }
-                            numberOfGuesses.innerHTML = totalGuesses.toString();
-                            logMessage.innerHTML = "Incorrect! You guessed to low!";
-                            previouslyGuessed.innerHTML = userValue;
+                        }
+                        else if(this.responseText === "low")
+                        {
+                            updateLow(userValue);
                         }
                         else if(this.responseText === "high")
                         {
-                            totalGuesses++;
-                            remainingTries--;
-                            maxTries.innerHTML = remainingTries;
-                            if(remainingTries === 0)
-                            {
-                                disable();
-                            }
-                            numberOfGuesses.innerHTML = totalGuesses.toString();
-                            logMessage.innerHTML = "Incorrect! You guessed to high!";
-                            previouslyGuessed.innerHTML = userValue;
+                            updateHigh(userValue);
                         }
                         else
                         {
-                            let JSONData = JSON.parse(this.response);
-                            updateTableData(JSONData);
+                            let JSONResponse = JSON.parse(this.response);
+                            updateTableData(JSONResponse);
                             remainingTries--;
                             totalGuesses++;
                             logMessage.innerHTML = "Correct!";
@@ -290,32 +331,26 @@ function contentGame()
             isEnabled = false;
         }
 
-        //Function for showing dialogue box.
-        function showDialogueBox(message)
-        {
-            guessButton.disabled = true;
-            quitOrResetMessage.innerHTML = message;
-            quitOrResetPopUp.style.display = "block";
-        }
-
         function reset()
         {
             //Generate a new number and reset the timer via ajax.
             let xhttp = new XMLHttpRequest();
             xhttp.onreadystatechange = function() {
                 if(this.readyState == 4 && this.status == 200) {
-
-                    //Reset variables and update them.
-                    passedTime = 0;
-                    maxTime = sessionTime;
-                    timeElement.innerHTML = maxTime;
-                    timeSpend.innerHTML = passedTime;
-                    remainingTries = <?php echo $_SESSION['maxtries']; ?>;
-                    maxTries.innerHTML = <?php echo $_SESSION['maxtries']; ?>;
-                    totalGuesses = 0;
-                    numberOfGuesses.innerHTML = totalGuesses.toString();
-                    quitOrResetPopUp.style.display = "none";
-                    enable();
+                    if(showSessionData === 1)
+                    {
+                        let sessionDataContainer = document.getElementById("sessiondata");
+                        let JSONResponse = JSON.parse(this.response);
+                        sessionDataContainer.innerHTML = JSONResponse;
+                        updateReset();
+                        enable();
+                    }
+                    else
+                    {
+                        //Reset variables and update them.
+                        updateReset();
+                        enable();
+                    }
                 }
             }
             xhttp.open("GET", "inc/functions.php?" + "function=resetgame", true);
@@ -332,6 +367,46 @@ function contentGame()
         function quit()
         {
             window.location.href = "index.php";
+        }
+
+        function updateLow(userValue)
+        {
+            totalGuesses++;
+            remainingTries--;
+            maxTries.innerHTML = remainingTries;
+            if(remainingTries === 0) {
+                disable();
+            }
+            numberOfGuesses.innerHTML = totalGuesses.toString();
+            logMessage.innerHTML = "Incorrect! You guessed to low!";
+            previouslyGuessed.innerHTML = userValue;
+        }
+
+        function updateHigh(userValue)
+        {
+            totalGuesses++;
+            remainingTries--;
+            maxTries.innerHTML = remainingTries;
+            if(remainingTries === 0)
+            {
+                disable();
+            }
+            numberOfGuesses.innerHTML = totalGuesses.toString();
+            logMessage.innerHTML = "Incorrect! You guessed to high!";
+            previouslyGuessed.innerHTML = userValue;
+        }
+
+        function updateReset()
+        {
+            passedTime = 0;
+            maxTime = sessionTime;
+            timeElement.innerHTML = maxTime;
+            timeSpend.innerHTML = passedTime;
+            remainingTries = <?php echo $_SESSION['maxtries']; ?>;
+            maxTries.innerHTML = <?php echo $_SESSION['maxtries']; ?>;
+            totalGuesses = 0;
+            numberOfGuesses.innerHTML = totalGuesses.toString();
+            quitOrResetPopUp.style.display = "none";
         }
 
         function updateTableData(JSON)
