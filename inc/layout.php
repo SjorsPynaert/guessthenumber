@@ -157,7 +157,7 @@ function contentGame()
                 <p>Previously guessed: <span id="previouslyguessed"></span></p>
                 <div class="border border-dark mb-2 opacity-50"></div>
             </div>
-            <div class="p-3 bg-primary w-100 h-auto text-white">
+            <div class="p-3 bg-primary w-100 h-auto text-white" id="sessiondatacontainer">
                 <?php
                 if(isset($_SESSION['showsessiondata']) && $_SESSION['showsessiondata'] === 1){
                     echo '<pre id="sessiondata">' . print_r($_SESSION, TRUE) . '</pre>';
@@ -210,6 +210,7 @@ function contentGame()
         let numberOfGuesses = document.getElementById("numberofguesses");
         let maxTries = document.getElementById("remainingtries");
         let highScoreTableBody = document.getElementById("highscoretablebody");
+        let sessionDataContainer = document.getElementById("sessiondatacontainer");
 
         //Some variables.
         let maxTime = <?php echo $_SESSION['maxseconds'];?>;
@@ -219,6 +220,11 @@ function contentGame()
         let remainingTries = <?php echo $_SESSION['maxtries'];?>;
         let isEnabled = true;
         let showSessionData = <?php echo $_SESSION['showsessiondata']?>;
+
+        if(showSessionData === 0)
+        {
+            sessionDataContainer.style.display = "none";
+        }
 
         //Timer that activates every second.
         let interval = setInterval(function (){
@@ -267,20 +273,20 @@ function contentGame()
                         if(showSessionData === 1)
                         {
                             let JSONResponse = JSON.parse(this.response);
-                            let sessionDataContainer = document.getElementById("sessiondata");
+                            let sessionData = document.getElementById("sessiondata");
                             if(JSONResponse.message === "low")
                             {
-                                sessionDataContainer.innerHTML = JSONResponse.session
+                                sessionData.innerHTML = JSONResponse.session
                                 updateLow(userValue);
                             }
                             else if(JSONResponse.message === "high")
                             {
-                                sessionDataContainer.innerHTML = JSONResponse.session
+                                sessionData.innerHTML = JSONResponse.session
                                 updateHigh(userValue);
                             }
                             else
                             {
-                                sessionDataContainer.innerHTML = JSONResponse.session
+                                sessionData.innerHTML = JSONResponse.session
                                 updateTableData(JSONResponse.data)
                                 remainingTries--;
                                 totalGuesses++;
@@ -339,9 +345,9 @@ function contentGame()
                 if(this.readyState == 4 && this.status == 200) {
                     if(showSessionData === 1)
                     {
-                        let sessionDataContainer = document.getElementById("sessiondata");
+                        let sessionData = document.getElementById("sessiondata");
                         let JSONResponse = JSON.parse(this.response);
-                        sessionDataContainer.innerHTML = JSONResponse;
+                        sessionData.innerHTML = JSONResponse;
                         updateReset();
                         enable();
                     }
@@ -517,32 +523,24 @@ function highScoresTable()
                 <!-- table body -->
                 <tbody id="highscoretablebody">
                     <?php
-                    //Simple foreach to pump out the data. Make sure to also check whether the returned data is not null.
-                    if(!$highscoreData)
+                    $i = 1;
+                    while ($row = $highscoreData->fetch_assoc())
                     {
-                        ?><h2>No high scores available.</h2><?php
-                    }
-                    else
-                    {
-                        $i = 1;
-                        while ($row = $highscoreData->fetch_assoc())
-                        {
-                            ?>
-                            <tr>
-                                <td><?php echo $row['id']; ?></td>
-                                <td><?php echo $i; ?></td>
-                                <td><?php echo $row['player']; ?></td>
-                                <td><?php echo $row['range']; ?></td>
-                                <td><?php echo $row['maxseconds'] ?></td>
-                                <td><?php echo $row['maxtries']; ?></td>
-                                <td><?php echo $row['numguesses']; ?></td>
-                                <td><?php echo $row['time']; ?></td>
-                                <td><?php echo $row['hiddennumber']; ?></td>
-                                <td><?php echo $row['playeddate']; ?></td>
-                            </tr>
-                            <?php
-                            $i++;
-                        }
+                        ?>
+                        <tr>
+                            <td><?php echo $row['id']; ?></td>
+                            <td><?php echo $i; ?></td>
+                            <td><?php echo $row['player']; ?></td>
+                            <td><?php echo $row['range']; ?></td>
+                            <td><?php echo $row['maxseconds'] ?></td>
+                            <td><?php echo $row['maxtries']; ?></td>
+                            <td><?php echo $row['numguesses']; ?></td>
+                            <td><?php echo $row['time']; ?></td>
+                            <td><?php echo $row['hiddennumber']; ?></td>
+                            <td><?php echo $row['playeddate']; ?></td>
+                        </tr>
+                        <?php
+                        $i++;
                     }
                     ?>
                 </tbody>
