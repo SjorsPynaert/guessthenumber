@@ -66,8 +66,8 @@ else if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET['function']) && $_GE
         /*When the number guessed is correct proceed to increment necessary values and create a new record in the database.
         Get the current time again and subtract the original time from it. Increment the amount of guesses and set the date
         and time via the date() function.*/
-        $currentTime = round(microtime(true));
-        $_SESSION['currenttime'] = $currentTime - $_SESSION['currenttime'];
+        $timeDifference = round(microtime(true)) - $_SESSION['currenttime'];
+        $_SESSION['currenttime'] =  round(microtime(true));
         $_SESSION['numberofguesses']++;
         $_SESSION['dateandtime'] = date('Y-m-d H:i:s');
 
@@ -77,7 +77,7 @@ else if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET['function']) && $_GE
         , '{$_SESSION["maxseconds"]}'
         , '{$_SESSION["maxtries"]}'
         , '{$_SESSION["numberofguesses"]}'
-        , '{$_SESSION["currenttime"]}'
+        , '$timeDifference'
         , '{$_SESSION["hiddennumber"]}'
         , '{$_SESSION["dateandtime"]}')";
 
