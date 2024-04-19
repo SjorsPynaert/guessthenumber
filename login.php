@@ -5,6 +5,4 @@ include "inc/layout.php";
 
 HTMLheader();
 contentLogin();
-//contentIndex();
 HTMLfooter();
-

@@ -547,3 +547,98 @@ function highScoresTable()
             </table>
     <?php
 }
+
+//Login screen.
+function contentLogin() {
+    ?>
+    <div class="w-100
+        h-auto
+        d-flex
+        justify-content-center
+        align-content-center
+        ">
+        <form method="POST" id="login-container" class="mt-5 bg-white shadow object-fit-contain">
+
+            <h1 class="bg-primary p-2 text-white">Login</h1>
+
+            <div class="p-2">
+                <label class="form-label" for="username">Username</label>
+                <input class="form-control" name="username" type="text" required>
+
+                <label class="form-label" for="password">Password</label>
+                <input class="form-control" id="password" name="password" type="password" required>
+
+                <div class="form-check">
+                    <label class="form-check-label" for="show-hide-password">Show password</label>
+                    <input class="form-check-input" id="show-hide-password" type="checkbox">
+                </div>
+
+                <p>
+                    <?php
+                    if(isset($_SESSION['message'])) {
+                        echo $_SESSION['message'];
+                        unset($_SESSION['message']);
+                    }
+                    ?>
+                </p>
+
+                <a class="d-block" href="register.php">Don't have an account yet? Click here to register now.</a>
+
+                <input type="hidden" name="login">
+
+                <button class="mt-2 btn btn-success" type="submit">Login</button>
+            </div>
+
+        </form>
+    </div>
+
+    <script src="js/login.js"></script>
+    <?php
+}
+
+function contentRegister() {
+    ?>
+    <div class="w-100
+    h-auto
+    d-flex
+    justify-content-center
+    align-content-center
+    ">
+        <form method="POST" id="form-register" class="mt-5 bg-white shadow w-25">
+
+            <h1 class="bg-primary p-2 text-white">Register</h1>
+
+            <div class="p-2">
+                <label class="form-label" for="username">Username</label>
+                <input id="username" class="form-control" name="username" type="text" required>
+
+                <label class="form-label" for="password">Password</label>
+                <input id="password" class="form-control" name="password" type="password" required>
+
+                <label  class="form-label" for="password-check">Password Check</label>
+                <input id="password-check" class="form-control" name="password-check" type="password" required>
+
+                <div class="form-check">
+                    <label class="form-check-label" for="show-hide-password">Show password</label>
+                    <input class="form-check-input" id="show-hide-password" type="checkbox">
+                </div>
+
+                <input type="hidden" name="register">
+
+                <p id="logging-text">
+                    <?php
+                    if(isset($_SESSION['message'])) {
+                        echo $_SESSION['message'];
+                        unset($_SESSION['message']);
+                    }
+                    ?>
+                </p>
+                <button class="mt-2 btn btn-success" type="submit">Register</button>
+            </div>
+
+        </form>
+    </div>
+
+    <script src="js/register.js"></script>
+    <?php
+}

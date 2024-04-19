@@ -5,18 +5,104 @@ session_start();
 
 //Database connection.
 //Default username is "root" and the password is blank.
-$server = "localhost";
-$username = "root";
-$password = "";
-$databaseName = "guessthenumber";
+function getDatabaseObject() {
+    $server = "localhost";
+    $username = "root";
+    $password = "";
+    $databaseName = "guessthenumber";
 
-$database = new mysqli($server, $username, $password, $databaseName);
+    return new mysqli($server, $username, $password, $databaseName);
+}
+
+$database = getDatabaseObject();
 
 if($database->connect_error) {
     die("Couldn't connect!");
 }
 
 $database->close();
+
+if($_SERVER['REQUEST_METHOD'] == "POST") {
+    handlePost();
+}
+
+function handlePost() {
+    if(isset($_POST['register'])) {
+        handleRegister();
+    }
+    else if(isset($_POST['login'])) {
+        handleLogin();
+    }
+    else if(isset($_POST['logout'])) {
+        //Logout the user by unsetting the session variable.
+        unset($_SESSION['user-logged-in']);
+    }
+}
+
+function handleRegister() {
+    $database = getDatabaseObject();
+
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    //Check if the user exists in the database.
+    $SQL = "SELECT * FROM users WHERE username = '$username';";
+
+    if ($database->query($SQL)->num_rows == 1) {
+        $_SESSION['message'] = "This user already exists!";
+    } else {
+        //Hash the password just because we can.
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+
+        //Create new instance in the database.
+        $SQL = "INSERT INTO users (`username`, `password`) VALUES ('$username', '$hash')";
+
+        if(!$database->query($SQL)) {
+            $_SESSION['message'] = "Something went wrong and we couldn't create your account. Contact the creator.";
+        } else {
+            $database->query($SQL);
+
+            //Return a message that the user was succesfully created and also log them in.
+            $_SESSION['message'] = "Succesfully created new user!";
+            $_SESSION['user-logged-in'] = $username;
+        }
+    }
+
+    $database->close();
+}
+
+function handleLogin() {
+    $database = getDatabaseObject();
+
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+    //Attempt to find the correct user in the database.
+    $SQL = "SELECT * FROM users WHERE 'username' = '$username'";
+
+    if($database->query($SQL)->num_rows > 1) {
+        $_SESSION['message'] = "There appears to multiple instances of this user. Contact the creator!";
+
+    } else if ($database->query($SQL)->num_rows == 1) {
+        //Get the hashed password of the user.
+        $SQL = "SELECT `password` FROM users WHERE `username` = '$username'";
+
+        $hash = $database->query($SQL);
+
+        //Compare the hash retrieved from the database with the entered password.
+        if(password_verify($password, $hash)) {
+            $_SESSION['user-logged-in'] = $username;
+            header("Location: index.php");
+            exit();
+        } else {
+            //If password is not correct return a message to the login page.
+            $_SESSION['message'] = "Password is incorrect!";
+        }
+    } else {
+        $_SESSION['message'] = "Username was not found or incorrect.";
+    }
+
+    $database->close();
+}
 
 function updateSessiondata() {
 
@@ -169,6 +255,8 @@ else if ($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET['function']) && $_GE
     }
 }
 
+
+
 if($_SERVER['REQUEST_METHOD'] == "POST")
 {
     //Check if the min number is higher than the max number else redirect back.
@@ -205,5 +293,7 @@ function getHighscoreData() {
     $database->close();
     return $highscoreData;
 }
+
+
 
 
