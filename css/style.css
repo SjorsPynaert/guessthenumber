@@ -24,3 +24,13 @@
 .margin-right {
     margin-right: 25px;
 }
+
+.margin-left {
+    margin-left: 10px;
+}
+
+.logout-button {
+    background-color: transparent;
+    color: white;
+    border: none;
+}

@@ -24,15 +24,43 @@ function HTMLheader()
     bg-dark
     text-white
     p-3">
-        <div class="d-flex">
-            <div class="container-title">
-                <a class="text-decoration-none text-white d-inline-block" href="index.php">Guess the Number!</a>
+        <div class="d-flex justify-content-between">
+
+            <div class="d-flex position-relative">
+                <div class="container-title">
+                    <a class="text-decoration-none text-white d-inline-block" href="index.php">Guess the Number!</a>
+                </div>
+                <div class="w-auto h-auto d-flex">
+                    <a class="text-decoration-none margin-right" href="index.php">Home</a>
+                    <a class="text-decoration-none" href="highscores.php">High Scores</a>
+                </div>
             </div>
-            <div class="w-auto h-auto d-flex">
-                <a class="text-decoration-none margin-right" href="index.php">Home</a>
-                <a class="text-decoration-none" href="highscores.php">High Scores</a>
-            </div>
+                <div class="text-center d-flex">
+                <?php
+                if(!isset($_SESSION['user-logged-in'])) {
+                    ?>
+                    <a href="login.php" style="text-decoration: none;">Login</a>
+                    <?php
+                } else {
+                    ?><p style="margin-bottom: 0;">Welcome <?php echo $_SESSION['user-logged-in'];?></p>
+                    <form id="logout-form" method="POST">
+                        <input type="hidden" name="logout">
+                        <a href="#" class="margin-left" id="logout" style="text-decoration: none;">Logout</a>
+                    </form>
+                    <script>
+                        let hyperlinkLogout = document.getElementById("logout"),
+                            logoutForm = document.getElementById("logout-form");
+
+                        hyperlinkLogout.addEventListener("click", () => {
+                           logoutForm.submit();
+                        });
+                    </script>
+                    <?php
+                }
+                ?>
+                </div>
         </div>
+
     </header>
     <?php
 }
@@ -76,11 +104,7 @@ function contentIndex()
                 </div>
                 <div class="d-flex">
                     <div class="w-50 p-3">
-                        <form action="game.php" method="POST">
-
-
-                            <label for="" class="form-label">Your name:</label>
-                            <input type="text" class="d-block form-text w-100 mb-2 form-control" name="yourname" required/>
+                        <form method="POST">
 
                             <label for="" class="form-label">Set minimum:</label>
                             <input type="number" min="0" class="d-block form-text w-100 mb-2 form-control" name="minnumber" required/>
@@ -91,7 +115,7 @@ function contentIndex()
                             <label for="" class="form-label">Max number of tries:</label>
                             <input type="number" min="0" class="d-block form-text w-100 mb-2 form-control" name="maxtries" required/>
 
-                            <label for="" class="form-label">Max number of seconds:</label>
+                            <label for="" class="form-label">Max number of seconds for each guess:</label>
                             <input type="number" min="0" max="150" class="d-block form-text w-100 mb-2 form-control" name="maxseconds" required/>
 
                             <div class="form-check mb-2">
@@ -109,6 +133,7 @@ function contentIndex()
                                 unset($_SESSION['message']);
                             }
                             ?>
+                            <input type="hidden" name="submit-settings">
                             <button type="submit" class="btn btn-primary">Submit</button>
                             <button type="reset" class="btn btn-danger">Reset</button>
                         </form>
@@ -136,17 +161,17 @@ function contentGame()
                 <h2>Guess the number!</h2>
             </div>
             <div class="w-100 p-3 bg-white">
-                <h3>Guess the number | play | <?php echo $_SESSION['player']?></h3>
+                <h3>Guess the number | play | <?php echo $_SESSION['user-logged-in'];?></h3>
                 <div class="border border-dark mb-2 opacity-50"></div>
 
-                <p>Time left: <span id="remainingtime" class="text-info"> <?php echo $_SESSION['maxseconds']?> </span></p>
-                <p>Time spend: <span id="timespend">0</span></p>
+                <p>Time left: <span id="remainingtime" class="text-info"> <?php echo $_SESSION['remaining-time']?> </span></p>
+                <p>Time spend: <span id="timespend"><?php echo $_SESSION['elapsed-time'];?></span></p>
 
                 <label for="" class="form-label">Your guess</label>
                 <input id="userguess" type="text" class="d-block form-text w-100 mb-2 form-control" name="yourguess">
                 <p>Min number: <span id="minmnumber"> <?php echo $_SESSION['minnumber']?> </span></p>
                 <p>Max number: <span id="maxnumber"> <?php echo $_SESSION['maxnumber']?> </span></p>
-                <p>Remaining tries: <span id="remainingtries"> <?php echo $_SESSION['maxtries']?> </span></p>
+                <p>Remaining tries: <span id="remainingtries"> <?php echo $_SESSION['remaining-tries']?> </span></p>
 
                 <button id="guessbutton" class="btn btn-success d-block mb-2" onclick="guess();">Make your guess</button>
                 <button id="quitorresetbutton" class="btn btn-danger d-block mb-2" onclick="showDialogueBox(`Do you want to quit or reset?`);">Quit or reset</button>
@@ -189,7 +214,10 @@ function contentGame()
                 <div class="d-flex justify-content-between w-100">
                     <button onclick="reset();" id="guessbutton" class="btn btn-success">Reset</button>
                     <button onclick="cancel();" id="cancelbutton" type="button" class="btn btn-warning">Cancel</button>
-                    <button onclick="quit();" id="quitbutton" class="btn btn-danger">Quit</button>
+                    <form method="POST">
+                        <input type="hidden" name="quit">
+                        <button type="submit" id="quitbutton" class="btn btn-danger">Quit</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -212,18 +240,42 @@ function contentGame()
         let highScoreTableBody = document.getElementById("highscoretablebody");
         let sessionDataContainer = document.getElementById("sessiondatacontainer");
 
-        //Some variables.
-        let maxTime = <?php echo $_SESSION['maxseconds'];?>;
+        //Some variables for handling the game on the page.
+        let maxTime = <?php echo $_SESSION['remaining-time'];?>;
         let sessionTime = <?php echo $_SESSION['maxseconds'];?>;
-        let passedTime = 0;
+        let passedTime = <?php echo $_SESSION['elapsed-time'];?>;
         let totalGuesses = 0;
-        let remainingTries = <?php echo $_SESSION['maxtries'];?>;
+        let remainingTries = <?php echo $_SESSION['remaining-tries'];?>;
         let isEnabled = true;
-        let showSessionData = <?php echo $_SESSION['showsessiondata']?>;
+        let showSessionData = <?php echo $_SESSION['showsessiondata'];?>;
+        let gameWon = <?php echo $_SESSION['game-won'];?>
 
         if(showSessionData === 0)
         {
             sessionDataContainer.style.display = "none";
+        }
+
+        if(gameWon === 1) {
+            disable();
+            timeElement.innerHTML = maxTime.toString();
+            timeSpend.innerHTML = "---";
+            timeElement.innerHTML = "---";
+            logMessage.innerHTML = "Congrats you won the game! Reset or Quit for different settings."
+        }
+        else if(remainingTries === 0) {
+            disable();
+            timeElement.innerHTML = maxTime.toString();
+            timeSpend.innerHTML = "---";
+            timeElement.innerHTML = "---";
+            logMessage.innerHTML = "You ran out of attempts!"
+        }
+        else if(maxTime === 0)
+        {
+            disable();
+            timeElement.innerHTML = maxTime.toString();
+            timeSpend.innerHTML = "---";
+            timeElement.innerHTML = "---";
+            logMessage.innerHTML = "You ran out of time!"
         }
 
         //Timer that activates every second.
@@ -270,6 +322,7 @@ function contentGame()
                 let xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
+                        updateTime();
                         if(showSessionData === 1)
                         {
                             let JSONResponse = JSON.parse(this.response);
@@ -346,8 +399,7 @@ function contentGame()
                     if(showSessionData === 1)
                     {
                         let sessionData = document.getElementById("sessiondata");
-                        let JSONResponse = JSON.parse(this.response);
-                        sessionData.innerHTML = JSONResponse;
+                        sessionData.innerHTML = JSON.parse(this.response);
                         updateReset();
                         enable();
                     }
@@ -370,10 +422,6 @@ function contentGame()
             guessButton.disabled = false;
 
         }
-        function quit()
-        {
-            window.location.href = "index.php";
-        }
 
         function updateLow(userValue)
         {
@@ -382,6 +430,8 @@ function contentGame()
             maxTries.innerHTML = remainingTries;
             if(remainingTries === 0) {
                 disable();
+                timeSpend.innerHTML = "---";
+                timeElement.innerHTML = "You ran out of attempts!";
             }
             numberOfGuesses.innerHTML = totalGuesses.toString();
             logMessage.innerHTML = "Incorrect! You guessed to low!";
@@ -396,10 +446,18 @@ function contentGame()
             if(remainingTries === 0)
             {
                 disable();
+                timeSpend.innerHTML = "---";
+                timeElement.innerHTML = "You ran out of attempts!";
             }
             numberOfGuesses.innerHTML = totalGuesses.toString();
             logMessage.innerHTML = "Incorrect! You guessed to high!";
             previouslyGuessed.innerHTML = userValue;
+        }
+
+        function updateTime() {
+            maxTime = sessionTime;
+            timeElement.innerHTML = maxTime;
+            timeSpend.innerHTML = passedTime;
         }
 
         function updateReset()
